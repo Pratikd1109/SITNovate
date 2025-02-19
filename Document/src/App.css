@@ -1,17 +1,12 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-
-    
 body {
   margin: 0;
   padding: 0;
   font-family: "Poppins", sans-serif;
-  background: #060606;
+  background: #000000;
   display: flex;
-  font-family: 'Poppins', sans-serif;
-    color: #4e4b4b;
-
+  color: #4e4b4b;
 }
 
 .app-container {
@@ -27,4 +22,28 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px;
+}
+
+/* Upload Box Styles */
+.upload-container {
+  width: 90%;               /* Bigger width */
+  padding: 30px;
+  background-color: #0a0a0a; /* Dark background matching theme */
+  border: 1px solid #4e4b4b;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #fcfafa60;
+}
+
+/* Response Box Styles */
+.response-box {
+  width: 90%;               /* Very big response box */
+  min-height: 500px;        /* Enough height */
+  padding: 20px;
+  background-color: #000000; /* Matching color scheme */
+  border: 1px solid #4e4b4b;
+  border-radius: 8px;
+  color: #ffffff;
+  overflow-y: auto;         /* Allow scrolling if content overflows */
+  margin-top: 20px;
 }

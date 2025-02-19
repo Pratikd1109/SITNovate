@@ -24,7 +24,7 @@ const UploadPage = ({ selectedModel, setResponseText }) => {
     formData.append("model", selectedModel);
 
     try {
-      const response = await fetch("http://localhost:5000/extract-text", {
+      const response = await fetch("http://192.168.43.161:5000/summarize", {
         method: "POST",
         body: formData,
       });
@@ -56,10 +56,12 @@ const UploadPage = ({ selectedModel, setResponseText }) => {
 
   return (
     <div className="upload-container">
-      <input type="file" onChange={handleFileChange} className="file-input" />
-      <button onClick={handleUpload} className="upload-button">
-        Upload & Summarize
-      </button>
+      <div className="upload-controls">
+        <input type="file" onChange={handleFileChange} className="file-input" />
+        <button onClick={handleUpload} className="upload-button">
+          Upload & Summarize
+        </button>
+      </div>
       {uploadStatus && <p className="status-message">{uploadStatus}</p>}
     </div>
   );

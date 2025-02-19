@@ -11,10 +11,15 @@ function App() {
   return (
     <div className="app-container">
       <Sidebar setSelectedModel={setSelectedModel} />
+      
       <div className="main-content">
         <h1>AI Document Processor</h1>
-        <UploadPage selectedModel={selectedModel} setResponseText={setResponseText} />
+
+        {/* Response Box at the top */}
         <ResponseBox responseText={responseText} />
+
+        {/* Upload Box at the bottom */}
+        <UploadPage selectedModel={selectedModel} setResponseText={setResponseText} />
       </div>
     </div>
   );

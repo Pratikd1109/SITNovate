@@ -1,76 +1,36 @@
-/* Centered Container */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: black;
-}
-
-/* Summary Box (Blue Box) */
-.response-box {
-  width: 80%;
-  max-width: 700px;
-  padding: 25px;
-  background: linear-gradient(135deg, #2c3e50, #34495e);
-  border-radius: 12px;
-  font-size: 20px;
-  color: white;
-  font-weight: bold;
-  min-height: 300px;
-  max-height: 500px;
-  overflow-y: auto;
-  text-align: left;
-  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 1000px;
-  position: absolute; /* or 'fixed' if you want it to stay on top while scrolling */
-top: 40;
-left: 50%;
-transform: translateX(-50%); /* Keeps it centered */
-background-color: lightgray;
-padding: 10px /* Space between summary box and upload section */
-}
-
-.response-box h3 {
-  font-size: 24px;
-  text-align: center;
-  margin-bottom: 150px;
-  color: #f1c40f;
-}
-
-/* Upload Section */
 .upload-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 15px;
   padding: 20px;
-  background: #444;
+  background: #070707;
   border-radius: 12px;
   box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
-  width: 50%;
-  max-width: 500px;
-  position: fixed;
-  bottom: 0;
-  left: 40%;
   width: 100%;
-    
-text-align: center;
-   padding: 10px;
+  max-width: 1500px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+/* New container for side-by-side layout */
+.upload-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
 }
 
 .file-input {
-  width: 90%;
+  width: 80%;
   padding: 12px;
-  border: 2px dashed #ddd;
-  background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed #070707;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   cursor: pointer;
   transition: border 0.3s ease;
-  text-align: center;
 }
 
 .file-input:hover {
@@ -80,12 +40,12 @@ text-align: center;
 .upload-button {
   background: #070707;
   color: white;
-  padding: 12px 20px;
+  padding: 12px 10px;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
   font-size: 18px;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .upload-button:hover {
