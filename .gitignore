@@ -34,7 +34,7 @@ dataset/
 data/
 
 # Machine Learning models & checkpoints
-model/
+
 models/
 checkpoints/
 *.ckpt
