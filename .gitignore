@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and debugging files
+*.log
+*.out
+*.err
+logs/
+debug.log
+
+# Dataset files (if large or confidential)
+*.csv
+*.json
+*.xlsx
+*.xml
+*.h5
+*.pth
+*.weights
+*.pkl
+*.zip
+*.tar.gz
+*.npy
+*.npz
+dataset/
+data/
+
+# Machine Learning models & checkpoints
+model/
+models/
+checkpoints/
+*.ckpt
+*.pb
+*.onnx
+
+# TensorBoard log files
+runs/
+logs/
+events.out.tfevents.*
+
+# IDE/editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Pip and Conda dependency files (lock files)
+Pipfile.lock
+poetry.lock
+conda-meta/
