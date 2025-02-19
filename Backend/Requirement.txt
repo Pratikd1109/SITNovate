@@ -1,0 +1,10 @@
+pip install flask flask-cors torch torchvision torchaudio werkzeug pymupdf python-docx
+flask
+flask-cors
+torch
+torchvision
+torchaudio
+werkzeug
+pymupdf
+python-docx
+pip install flask flask-cors torch torchvision torchaudio werkzeug pymupdf python-docx

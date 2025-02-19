@@ -4,13 +4,11 @@ import "./UploadPage.css";
 const UploadPage = ({ selectedModel }) => {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
-  const [progress, setProgress] = useState(0);
   const [responseText, setResponseText] = useState("");
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
     setUploadStatus("");
-    setProgress(0);
     setResponseText("");
   };
 
@@ -21,40 +19,25 @@ const UploadPage = ({ selectedModel }) => {
     }
 
     setUploadStatus("Uploading...");
-    setProgress(0);
-    setResponseText("");
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("model", selectedModel);
+    formData.append("model", selectedModel); // Send selected model type
 
     try {
-      const response = await fetch("https://api.example.com/upload", {
+      const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.body) {
-        throw new Error("No response stream available");
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadStatus("Processing complete!");
+        setResponseText(result.summary);
+      } else {
+        setUploadStatus("Error: " + result.error);
       }
-
-      setUploadStatus("Processing...");
-      
-      // Process streaming response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let receivedText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        receivedText += chunk;
-        setResponseText(receivedText); // Update UI dynamically
-      }
-
-      setUploadStatus("Processing complete!");
     } catch (error) {
       setUploadStatus("Error during upload or processing.");
       console.error("Error:", error);
@@ -64,7 +47,9 @@ const UploadPage = ({ selectedModel }) => {
   return (
     <div className="upload-container">
       <input type="file" onChange={handleFileChange} className="file-input" />
-      <button onClick={handleUpload} className="upload-button">Upload & Send to AI</button>
+      <button onClick={handleUpload} className="upload-button">
+        Upload & Summarize
+      </button>
       {uploadStatus && <p className="status-message">{uploadStatus}</p>}
       {responseText && <div className="response-box">{responseText}</div>}
     </div>
