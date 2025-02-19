@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS  # Import CORS
 import os
 import torch
 import fitz  # PyMuPDF for PDFs
@@ -7,13 +7,19 @@ import docx
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS to allow frontend communication
+CORS(app)  # Enable CORS
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Load AI Model Function
+@app.route("/", methods=["GET"])
+def hello():
+    return "hello"
+
+
+
+# Load AI Models
 def load_model(model_path):
     model = torch.load(model_path, map_location=torch.device("cpu"))
     model.eval()
@@ -26,13 +32,12 @@ def load_model(model_path):
 #     "legal_contracts": load_model("models/legal_contracts_model.pth"),
 # }
 
-# Allowed file types
+# Function to check allowed file types
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
-
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Extract text from document
+# Function to extract text from uploaded documents
 def extract_text(file_path):
     ext = file_path.rsplit(".", 1)[1].lower()
 
@@ -50,13 +55,14 @@ def extract_text(file_path):
             return f.read()
     return None
 
-@app.route("/upload", methods=["POST"])
-def upload_file():
+# API Route to Summarize Documents
+@app.route("/summarize", methods=["POST"])
+def summarize():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    model_type = request.form.get("model", "articles")  # Get selected model type from frontend
+    model_type = request.form.get("model_type", "articles")
 
     if file.filename == "" or not allowed_file(file.filename):
         return jsonify({"error": "Invalid file type"}), 400
@@ -72,13 +78,13 @@ def upload_file():
     if not text:
         return jsonify({"error": "Failed to extract text"}), 400
 
-    # Process text using AI model (Example processing, update as per your model logic)
+    # Process text using AI model
     model = models[model_type]
-    input_tensor = torch.tensor([ord(c) for c in text[:1000]]).unsqueeze(0)
+    input_tensor = torch.tensor([ord(c) for c in text[:1000]]).unsqueeze(0)  # Example processing
     with torch.no_grad():
-        output = model(input_tensor)  # Replace with actual model processing logic
+        output = model(input_tensor)  # Model makes prediction
 
-    summary = "Generated summary..."  # Replace with actual AI model output
+    summary = "Generated summary..."  # Replace with actual model output processing
     return jsonify({"extracted_text": text[:1000], "summary": summary})
 
 if __name__ == "__main__":
