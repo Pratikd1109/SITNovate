@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./UploadPage.css";
 
-const UploadPage = ({ selectedModel, setResponseText }) => {
+const UploadPage = ({ setResponseText }) => {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
@@ -13,28 +13,27 @@ const UploadPage = ({ selectedModel, setResponseText }) => {
 
   const handleUpload = async () => {
     if (!file) {
-      setUploadStatus("Please select a file first.");
+      setUploadStatus("❌ Please select a file first.");
       return;
     }
 
-    setUploadStatus("Uploading...");
+    setUploadStatus("⏳ Uploading...");
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("model", selectedModel);
 
     try {
-      const response = await fetch("http://192.168.43.161:5000/summarize", {
+      const response = await fetch("http://127.0.0.1:5000/extract-text", {
         method: "POST",
         body: formData,
       });
 
       if (!response.body) {
-        setUploadStatus("No response from server.");
+        setUploadStatus("⚠️ No response from server.");
         return;
       }
 
-      setUploadStatus("Processing...");
+      setUploadStatus("🔄 Processing...");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -44,12 +43,12 @@ const UploadPage = ({ selectedModel, setResponseText }) => {
         const { done, value } = await reader.read();
         if (done) break;
         resultText += decoder.decode(value, { stream: true });
-        setResponseText(resultText);
+        setResponseText(resultText); // Update the response box in real-time
       }
 
-      setUploadStatus("Processing complete!");
+      setUploadStatus("✅ Processing complete!");
     } catch (error) {
-      setUploadStatus("Error during upload or processing.");
+      setUploadStatus("❌ Error during upload or processing.");
       console.error("Error:", error);
     }
   };
