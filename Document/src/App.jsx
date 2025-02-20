@@ -13,7 +13,7 @@ function App() {
       <Sidebar setSelectedModel={setSelectedModel} />
       
       <div className="main-content">
-        <h1>AI Document Processor</h1>
+        <h1>FUSION SUM UP (AI Document Summerizer)</h1>
 
         {/* Response Box at the top */}
         <ResponseBox responseText={responseText} />
