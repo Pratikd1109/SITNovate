@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./UploadPage.css";
 
-const UploadPage = ({ setResponseText }) => {
+const UploadPage = ({ selectedModel, setResponseText }) => {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
@@ -9,6 +9,20 @@ const UploadPage = ({ setResponseText }) => {
     setFile(event.target.files[0]);
     setUploadStatus("");
     setResponseText("");
+  };
+
+  // Function to get API endpoint based on selected model
+  const getApiEndpoint = () => {
+    switch (selectedModel) {
+      case "Articles":
+        return "http://127.0.0.1:5000/summarize";
+      case "Research Paper":
+        return "http://127.0.0.1:5001/summarize";
+      case "Legal Contracts":
+        return "http://127.0.0.1:5002/summarize";
+      default:
+        return "http://127.0.0.1:5003/summarize"; // Default to Articles API
+    }
   };
 
   const handleUpload = async () => {
@@ -23,33 +37,23 @@ const UploadPage = ({ setResponseText }) => {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/extract-text", {
+      const response = await fetch(getApiEndpoint(), {
         method: "POST",
         body: formData,
       });
 
-      if (!response.body) {
-        setUploadStatus("⚠️ No response from server.");
+      if (!response.ok) {
+        setUploadStatus("⚠️ Server error.");
         return;
       }
 
-      setUploadStatus("🔄 Processing...");
+      const data = await response.json();
+      setResponseText(data.summary); // Set the summarized response text
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let resultText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        resultText += decoder.decode(value, { stream: true });
-        setResponseText(resultText); // Update the response box in real-time
-      }
-
-      setUploadStatus("✅ Processing complete!");
+      setUploadStatus("✅ Summary Ready!");
     } catch (error) {
-      setUploadStatus("❌ Error during upload or processing.");
-      console.error("Error:", error);
+      setUploadStatus("❌ Error during upload.");
+      console.error("Upload Error:", error);
     }
   };
 
