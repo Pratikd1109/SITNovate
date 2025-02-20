@@ -25,7 +25,7 @@ const UploadPage = ({ setResponseText, selectedModel }) => {
     // Determine the correct API endpoint
     const apiUrl = selectedModel === "Legal Contracts" 
       ? "http://127.0.0.1:5000/summarize" 
-      : "http://127.0.0.1:5001/summarize";
+      : "http://127.0.0.1:5000/summarize";
 
     try {
       const response = await fetch(apiUrl, {

@@ -1,85 +1,103 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import os
+from flask import Flask, request, jsonify, Response, stream_with_context
 import torch
-import fitz  # PyMuPDF for PDFs
+from transformers import LongT5ForConditionalGeneration, AutoTokenizer
+import PyPDF2
 import docx
-from werkzeug.utils import secure_filename
+from flask_cors import CORS
+import time
 
+# ✅ Initialize Flask App
 app = Flask(__name__)
-CORS(app)  # Enable CORS to allow frontend communication
+CORS(app)
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+# ✅ Set Paths
+pt_model_path = r"E:\Backend\Models\converted_model_correct.pt"  # Update your path
 
-# Load AI Model Function
-def load_model(model_path):
-    model = torch.load(model_path, map_location=torch.device("cpu"))
-    model.eval()
-    return model
+# ✅ Load Pretrained Model
+model = LongT5ForConditionalGeneration.from_pretrained("google/long-t5-tglobal-base")
+checkpoint = torch.load(pt_model_path, map_location="cpu")  # Load .pt file
+model.load_state_dict(checkpoint, strict=False)  # Allow missing keys if necessary
+model.eval()  # Set model to evaluation mode
 
-# Load all models
-# models = {
-#     "articles": load_model("models/articles_model.pth"),
-#     "research_papers": load_model("models/research_papers_model.pth"),
-#     "legal_contracts": load_model("models/legal_contracts_model.pth"),
-# }
+# ✅ Load Tokenizer
+tokenizer = AutoTokenizer.from_pretrained("google/long-t5-tglobal-base")
 
-# Allowed file types
-ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
+# ✅ Set Device (Use GPU if available)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+# 🔹 Extract text from file (PDF or DOCX)
+def extract_text(file):
+    text = ""
+    if file.filename.endswith(".pdf"):
+        reader = PyPDF2.PdfReader(file)
+        text = " ".join([page.extract_text() for page in reader.pages if page.extract_text()])
+    elif file.filename.endswith(".docx"):
+        doc = docx.Document(file)
+        text = " ".join([para.text for para in doc.paragraphs])
+    return text
 
-# Extract text from document
-def extract_text(file_path):
-    ext = file_path.rsplit(".", 1)[1].lower()
+# 🔹 Format summary into 2-3 paragraphs
+def format_summary(summary):
+    words = summary.split()  # Split into words
+    paragraph_size = max(50, len(words) // 3)  # Ensure at least 50 words per paragraph
 
-    if ext == "pdf":
-        text = ""
-        with fitz.open(file_path) as doc:
-            for page in doc:
-                text += page.get_text("text") + "\n"
-        return text.strip()
-    elif ext == "docx":
-        doc = docx.Document(file_path)
-        return "\n".join([para.text for para in doc.paragraphs])
-    elif ext == "txt":
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return None
+    paragraphs = []
+    for i in range(0, len(words), paragraph_size):
+        paragraphs.append(" ".join(words[i : i + paragraph_size]))  # Group words into paragraphs
 
-@app.route("/upload", methods=["POST"])
-def upload_file():
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+    return "\n\n".join(paragraphs)  # Ensure paragraphs are separated by double newlines
 
-    file = request.files["file"]
-    model_type = request.form.get("model", "articles")  # Get selected model type from frontend
-
-    if file.filename == "" or not allowed_file(file.filename):
-        return jsonify({"error": "Invalid file type"}), 400
-
-    if model_type not in models:
-        return jsonify({"error": "Invalid model type"}), 400
-
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(file_path)
-
-    text = extract_text(file_path)
+# 🔹 Streaming Response Generator
+def generate_summary_stream(text):
     if not text:
-        return jsonify({"error": "Failed to extract text"}), 400
+        yield "No extractable text found.\n"
+        return
 
-    # Process text using AI model (Example processing, update as per your model logic)
-    model = models[model_type]
-    input_tensor = torch.tensor([ord(c) for c in text[:1000]]).unsqueeze(0)
+    # ✅ Tokenize Input
+    yield "Tokenizing input text...\n"
+    inputs = tokenizer(text, return_tensors="pt", max_length=2048, truncation=True).to(device)
+    time.sleep(1)  # Simulate processing delay
+
+    # ✅ Generate Summary
+    yield "Generating summary...\n"
     with torch.no_grad():
-        output = model(input_tensor)  # Replace with actual model processing logic
+        summary_ids = model.generate(
+            **inputs, max_length=250, min_length=100, length_penalty=2.0, num_beams=4
+        )
 
-    summary = "Generated summary..."  # Replace with actual AI model output
-    return jsonify({"extracted_text": text[:1000], "summary": summary})
+    # ✅ Decode Summary
+    summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
+    # ✅ Format Summary into Paragraphs with HTML Breaks for Browser Rendering
+    formatted_summary = format_summary(summary).replace("\n\n", "<br><br>")
+
+    # ✅ Stream Final Output
+    yield f"\n\n{formatted_summary}\n"
+
+# 🔹 Define Summarization Endpoint
+@app.route("/summarize", methods=["POST"])
+def summarize():
+    try:
+        # ✅ Check if file is uploaded
+        if "file" not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "Empty file"}), 400
+
+        # ✅ Extract text from the uploaded file
+        input_text = extract_text(file)
+
+        if not input_text.strip():
+            return jsonify({"error": "No extractable text found"}), 400
+
+        return Response(stream_with_context(generate_summary_stream(input_text)), content_type="text/html")  # Use text/html to ensure line breaks render properly
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ✅ Run Flask App
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000, threaded=True)
